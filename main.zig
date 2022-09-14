@@ -51,7 +51,7 @@ const program = [_]Instruction{
 export var stack = [_]u64{0} ** 2048;
 
 // Instruction opcode.
-const Opcode = enum(u32) {
+const Opcode = enum(u64) {
     li,
     cp,
     bge,
@@ -78,7 +78,7 @@ const ops: std.EnumArray(Opcode, Operation) = ops: {
 
 // CM2 bytecode format.
 const Instruction = struct {
-    const Data = u32;
+    const Data = u64;
 
     op: Opcode,
     d0: Data = 0,
