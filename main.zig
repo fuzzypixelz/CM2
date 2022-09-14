@@ -48,10 +48,10 @@ const program = [_]Instruction{
     .{ .op = .ret },
 };
 
-export var stack = [_]u64{0} ** 2048;
+export var stack = [_]usize{0} ** 2048;
 
 // Instruction opcode.
-const Opcode = enum(u64) {
+const Opcode = enum(usize) {
     li,
     cp,
     bge,
@@ -64,7 +64,7 @@ const Opcode = enum(u64) {
 };
 
 // Reference to the function executed on each Instruction.
-const Operation = *const fn (pc: u64, sp: u64) void;
+const Operation = *const fn (pc: usize, sp: usize) void;
 
 // A mapping from Instruction opcodes to operations.
 const ops: std.EnumArray(Opcode, Operation) = ops: {
@@ -78,7 +78,7 @@ const ops: std.EnumArray(Opcode, Operation) = ops: {
 
 // CM2 bytecode format.
 const Instruction = struct {
-    const Data = u64;
+    const Data = usize;
 
     op: Opcode,
     d0: Data = 0,
@@ -98,7 +98,7 @@ const CM2 = struct {
     }
     // Load an immediate value into rX.
     // > li rX imm N/A
-    pub fn li(pc: u64, sp: u64) void {
+    pub fn li(pc: usize, sp: usize) void {
         const c = program[pc];
         stack[sp - c.d0] = c.d1;
         @call(
@@ -109,7 +109,7 @@ const CM2 = struct {
     }
     // Copy the value of rY to rX.
     // > cp rX rY N/A
-    pub fn cp(pc: u64, sp: u64) void {
+    pub fn cp(pc: usize, sp: usize) void {
         const c = program[pc];
         stack[sp - c.d0] = stack[sp - c.d1];
         @call(
@@ -120,7 +120,7 @@ const CM2 = struct {
     }
     // Branch to lbl if rX is greater than or equal to rY.
     // > bge rX rY lbl
-    pub fn bge(pc: u64, sp: u64) void {
+    pub fn bge(pc: usize, sp: usize) void {
         const c = program[pc];
         if (stack[sp - c.d0] >= stack[sp - c.d1]) {
             @call(
@@ -138,7 +138,7 @@ const CM2 = struct {
     }
     // Return from a function by collapsing its frame.
     // > ret N/A N/A N/A
-    pub fn ret(pc: u64, sp: u64) void {
+    pub fn ret(pc: usize, sp: usize) void {
         // Thanks Zig :P
         _ = pc;
         _ = sp;
@@ -146,7 +146,7 @@ const CM2 = struct {
     }
     // Write into rX the value of (rY + rZ).
     // > add rX rY rZ
-    pub fn add(pc: u64, sp: u64) void {
+    pub fn add(pc: usize, sp: usize) void {
         const c = program[pc];
         stack[sp - c.d0] = stack[sp - c.d1] + stack[sp - c.d2];
         @call(
@@ -157,7 +157,7 @@ const CM2 = struct {
     }
     // Write into rX the value of (rY - rZ).
     // > sub rX rY rZ
-    pub fn sub(pc: u64, sp: u64) void {
+    pub fn sub(pc: usize, sp: usize) void {
         const c = program[pc];
         stack[sp - c.d0] = stack[sp - c.d1] - stack[sp - c.d2];
         @call(
@@ -170,11 +170,11 @@ const CM2 = struct {
     // > call imm1 imm2 lbl
     // [ rN, ..., r0 ]
     //            ^ sp (rX = stack[X])
-    pub fn call(pc: u64, sp: u64) void {
+    pub fn call(pc: usize, sp: usize) void {
         const c = program[pc];
         const bp = sp + c.d1;
         std.mem.copy(
-            u64,
+            usize,
             stack[(bp - c.d0)..bp],
             stack[(sp - c.d0)..sp],
         );
@@ -192,13 +192,13 @@ const CM2 = struct {
     }
     // Exit with rX code.
     // > exit rX N/A N/A
-    pub fn exit(pc: u64, sp: u64) void {
+    pub fn exit(pc: usize, sp: usize) void {
         const c = program[pc];
         std.process.exit(@intCast(u8, stack[sp - c.d0]));
     }
     // Print a register to stdout.
     // > put rX N/A N/A
-    pub fn put(pc: u64, sp: u64) void {
+    pub fn put(pc: usize, sp: usize) void {
         const c = program[pc];
         std.io.getStdOut().writer().print("{}\n", .{stack[sp - c.d0]}) catch {
             // TODO: handle this.
