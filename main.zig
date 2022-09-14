@@ -172,17 +172,18 @@ const CM2 = struct {
     //            ^ sp (rX = stack[X])
     pub fn call(pc: u64, sp: u64) void {
         const c = program[pc];
+        const bp = sp + c.d1;
         std.mem.copy(
             u64,
-            stack[(sp - c.d0 + c.d1)..(sp + c.d1)],
+            stack[(bp - c.d0)..bp],
             stack[(sp - c.d0)..sp],
         );
         @call(
             .{},
             ops.get(program[c.d2].op),
-            .{ c.d2, sp + c.d1 },
+            .{ c.d2, bp },
         );
-        stack[sp] = stack[sp + c.d1];
+        stack[sp] = stack[bp];
         @call(
             .{ .modifier = .always_tail },
             ops.get(program[pc + 1].op),
