@@ -10,42 +10,42 @@ pub fn main() void {
 //   else fib(n - 1) + fib(n - 2)
 const program = [_]Instruction{
     // begin/setup
-    .{ .op = .call, .d0 = 0, .d1 = 2, .d2 = 3 },
-    .{ .op = .li, .d0 = 0, .d1 = 0 },
-    .{ .op = .exit, .d0 = 0 },
-    .{ .op = .li, .d0 = 1, .d1 = 35 }, // INPUT
-    .{ .op = .call, .d0 = 1, .d1 = 5, .d2 = 7 },
-    .{ .op = .put, .d0 = 0 },
-    .{ .op = .ret },
+    .{ .op = CM2.call, .d0 = 0, .d1 = 2, .d2 = 3 },
+    .{ .op = CM2.li, .d0 = 0, .d1 = 0 },
+    .{ .op = CM2.exit, .d0 = 0 },
+    .{ .op = CM2.li, .d0 = 1, .d1 = 35 }, // INPUT
+    .{ .op = CM2.call, .d0 = 1, .d1 = 5, .d2 = 7 },
+    .{ .op = CM2.put, .d0 = 0 },
+    .{ .op = CM2.ret },
     // r2 = 2
-    .{ .op = .li, .d0 = 2, .d1 = 2 },
+    .{ .op = CM2.li, .d0 = 2, .d1 = 2 },
     // if/else
-    .{ .op = .bge, .d0 = 1, .d1 = 2, .d2 = 11 },
+    .{ .op = CM2.bge, .d0 = 1, .d1 = 2, .d2 = 11 },
     // case: n < 2
-    .{ .op = .cp, .d0 = 0, .d1 = 1 },
+    .{ .op = CM2.cp, .d0 = 0, .d1 = 1 },
     // retrun r0
-    .{ .op = .ret },
+    .{ .op = CM2.ret },
     // case: n >= 2
     // r3 = 1
-    .{ .op = .li, .d0 = 3, .d1 = 1 },
+    .{ .op = CM2.li, .d0 = 3, .d1 = 1 },
     // r1 = r1 - r3
-    .{ .op = .sub, .d0 = 1, .d1 = 1, .d2 = 3 },
+    .{ .op = CM2.sub, .d0 = 1, .d1 = 1, .d2 = 3 },
     // r0 = fib(r1)
-    .{ .op = .call, .d0 = 1, .d1 = 5, .d2 = 7 },
+    .{ .op = CM2.call, .d0 = 1, .d1 = 5, .d2 = 7 },
     // r4 = 0
-    .{ .op = .li, .d0 = 4, .d1 = 0 },
+    .{ .op = CM2.li, .d0 = 4, .d1 = 0 },
     // r4 = r4 + r0
-    .{ .op = .add, .d0 = 4, .d1 = 4, .d2 = 0 },
+    .{ .op = CM2.add, .d0 = 4, .d1 = 4, .d2 = 0 },
     // r1 = r1 - r3 = r1 - 1
-    .{ .op = .sub, .d0 = 1, .d1 = 1, .d2 = 3 },
+    .{ .op = CM2.sub, .d0 = 1, .d1 = 1, .d2 = 3 },
     // r0 = fib(r1)
-    .{ .op = .call, .d0 = 1, .d1 = 5, .d2 = 7 },
+    .{ .op = CM2.call, .d0 = 1, .d1 = 5, .d2 = 7 },
     // r4 = r4 + r0
-    .{ .op = .add, .d0 = 4, .d1 = 4, .d2 = 0 },
+    .{ .op = CM2.add, .d0 = 4, .d1 = 4, .d2 = 0 },
     // r0 = r4
-    .{ .op = .cp, .d0 = 0, .d1 = 4 },
+    .{ .op = CM2.cp, .d0 = 0, .d1 = 4 },
     // retrun r0
-    .{ .op = .ret },
+    .{ .op = CM2.ret },
 };
 
 export var stack = [_]usize{0} ** 2048;
@@ -80,7 +80,7 @@ const ops: std.EnumArray(Opcode, Operation) = ops: {
 const Instruction = struct {
     const Data = usize;
 
-    op: Opcode,
+    op: Operation,
     d0: Data = 0,
     d1: Data = 0,
     d2: Data = 0,
@@ -92,7 +92,7 @@ const CM2 = struct {
     pub fn start() void {
         @call(
             .{ .modifier = .never_tail },
-            ops.get(program[0].op),
+            program[0].op,
             .{ 0, 0 },
         );
     }
@@ -103,7 +103,7 @@ const CM2 = struct {
         stack[sp - c.d0] = c.d1;
         @call(
             .{ .modifier = .always_tail },
-            ops.get(program[pc + 1].op),
+            program[pc + 1].op,
             .{ pc + 1, sp },
         );
     }
@@ -114,7 +114,7 @@ const CM2 = struct {
         stack[sp - c.d0] = stack[sp - c.d1];
         @call(
             .{ .modifier = .always_tail },
-            ops.get(program[pc + 1].op),
+            program[pc + 1].op,
             .{ pc + 1, sp },
         );
     }
@@ -125,13 +125,13 @@ const CM2 = struct {
         if (stack[sp - c.d0] >= stack[sp - c.d1]) {
             @call(
                 .{ .modifier = .always_tail },
-                ops.get(program[c.d2].op),
+                program[c.d2].op,
                 .{ c.d2, sp },
             );
         } else {
             @call(
                 .{ .modifier = .always_tail },
-                ops.get(program[pc + 1].op),
+                program[pc + 1].op,
                 .{ pc + 1, sp },
             );
         }
@@ -151,7 +151,7 @@ const CM2 = struct {
         stack[sp - c.d0] = stack[sp - c.d1] + stack[sp - c.d2];
         @call(
             .{ .modifier = .always_tail },
-            ops.get(program[pc + 1].op),
+            program[pc + 1].op,
             .{ pc + 1, sp },
         );
     }
@@ -162,7 +162,7 @@ const CM2 = struct {
         stack[sp - c.d0] = stack[sp - c.d1] - stack[sp - c.d2];
         @call(
             .{ .modifier = .always_tail },
-            ops.get(program[pc + 1].op),
+            program[pc + 1].op,
             .{ pc + 1, sp },
         );
     }
@@ -180,13 +180,13 @@ const CM2 = struct {
         );
         @call(
             .{},
-            ops.get(program[c.d2].op),
+            program[c.d2].op,
             .{ c.d2, bp },
         );
         stack[sp] = stack[bp];
         @call(
             .{ .modifier = .always_tail },
-            ops.get(program[pc + 1].op),
+            program[pc + 1].op,
             .{ pc + 1, sp },
         );
     }
@@ -205,7 +205,7 @@ const CM2 = struct {
         };
         @call(
             .{ .modifier = .always_tail },
-            ops.get(program[pc + 1].op),
+            program[pc + 1].op,
             .{ pc + 1, sp },
         );
     }
