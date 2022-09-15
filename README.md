@@ -16,7 +16,7 @@ Note that I only tested this on x86_64 Linux with Zig 0.10-dev.
 Assuming you have a Zig toolchain up and running, I recommend you compile `cm2` in fast release mode:
 
 ```console
-zig build-exe -O ReleaseFast main.zig --name cm2
+zig build-exe -O ReleaseFast main.zig --strip
 ```
 
 The `program` global variable currently contains a hardcoded example assembly program that computes the 35th element of the Fibonacci sequence. You can play around with it to run your own programs. There is no assembler nor any bytecode reader.
@@ -24,9 +24,10 @@ The `program` global variable currently contains a hardcoded example assembly pr
 ## Preliminary Benchmarks
 
 The following was obtained on an x86_64 Linux system running an `Intel(R) Core(TM) i5-6300U CPU @ 2.40GHz`.
+You can see that CM2 is on par with wasm3, which is to be expected.
 
 | Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
 |:---|---:|---:|---:|---:|
-| `./cm2` | 479.1 ± 5.2 | 476.3 | 493.6 | 1.00 |
-| `lua bench/fib.lua` | 882.6 ± 10.9 | 876.4 | 913.3 | 1.84 ± 0.03 |
-| `python3 bench/fib.py` | 3179.3 ± 27.9 | 3147.8 | 3231.2 | 6.64 ± 0.09 |
+| `./cm2 bench/fib.cm2` | 185.2 ± 3.6 | 177.7 | 192.5 | 1.00 |
+| `./wasm3-cosmopolitan.com --func fib bench/fib32.wasm 32` | 210.7 ± 1.5 | 208.7 | 214.0 | 1.14 ± 0.02 |
+| `lua bench/fib.lua` | 347.4 ± 5.6 | 341.3 | 356.3 | 1.88 ± 0.05 |
