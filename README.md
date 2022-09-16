@@ -16,10 +16,24 @@ Note that I only tested this on x86_64 Linux with Zig 0.10-dev.
 Assuming you have a Zig toolchain up and running, I recommend you compile `cm2` in fast release mode:
 
 ```console
-zig build-exe -O ReleaseFast main.zig --strip
+# gotta go fast
+zig build-exe -O ReleaseFast cm2.zig --strip
 ```
 
-The `program` global variable currently contains a hardcoded example assembly program that computes the 35th element of the Fibonacci sequence. You can play around with it to run your own programs. There is no assembler nor any bytecode reader.
+The `cm2` commandline program accepts a `file.cm2` binary executable that's very hard to read and write.
+Instead, you can write CM2 programs in ASCII assembly and generate binary executables from them using the
+`asm.py` program.
+
+You can start with the `bench/fib.asm` assembly program since it has comments explaining what each instruction does:
+
+```console
+# outputs bench/fib.cm2
+./asm.py bench/fib.asm
+# fib(32) = 2178309
+./cm2 bench/fib/cm2
+```
+
+There is no full documentation of the bytecode, outside of comments in `cm2.zig`, just yet.
 
 ## Preliminary Benchmarks
 
