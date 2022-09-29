@@ -17,7 +17,7 @@ Assuming you have a Zig toolchain up and running, I recommend you compile `cm2` 
 
 ```console
 # gotta go fast
-zig build-exe -O ReleaseFast cm2.zig --strip
+zig build-exe -O ReleaseFast cm2.zig -fstage1 --strip
 ```
 
 The `cm2` commandline program accepts a `file.cm2` binary executable that's very hard to read and write.

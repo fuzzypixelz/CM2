@@ -17,10 +17,11 @@ const Opcode = enum(Register) {
 };
 
 // Reference to the function executed on each Instruction.
-const Operation = *const fn (pc: Register, sp: Register) void;
+const Operation = fn (pc: Register, sp: Register) void;
 
 // CM2 bytecode format, after complilation.
-const Instruction = extern struct {
+// FIXME: this should be extern instead.
+const Instruction = packed struct {
     const Data = usize;
     op: Operation,
     d0: Data = 0,
@@ -37,6 +38,7 @@ const operations: std.EnumArray(Opcode, Operation) = blk: {
     }
     break :blk map;
 };
+// const operations: std.EnumArray(Opcode, Operation) = undefined;
 
 // Maximum size of input files, arbitrarily set to 1GB.
 const max_input_size = 1024 * 1024 * 1024;
@@ -129,19 +131,17 @@ const Machine = struct {
     // > bge rX rY lbl
     pub fn bge(pc: Register, sp: Register) void {
         const c = program[pc];
+        // FIXME: this is a weird way of writing this.
+        var o: Operation = undefined;
+        var p: Register = undefined;
         if (stack[sp - c.d0] >= stack[sp - c.d1]) {
-            @call(
-                .{},
-                program[c.d2].op,
-                .{ c.d2, sp },
-            );
+            o = program[c.d2].op;
+            p = c.d2;
         } else {
-            @call(
-                .{ .modifier = .always_tail },
-                program[pc + 1].op,
-                .{ pc + 1, sp },
-            );
+            o = program[pc + 1].op;
+            p = pc + 1;
         }
+        @call(.{ .modifier = .always_tail }, o, .{ p, sp });
     }
     // Return from a function by collapsing its frame.
     // > ret N/A N/A N/A
